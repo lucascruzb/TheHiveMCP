@@ -270,8 +270,15 @@ func (t *SearchTool) getExcludedFields(entityType string, keptColumns []string, 
 	allFields := utils.GetJSONFields(baseModel)
 	excludeFields := make([]string, 0)
 
+	// System fields that must never be excluded from search results.
+	// _id is required by additional queries to fetch related entities.
+	systemFields := []string{"_id"}
+
 	for _, field := range allFields {
 		if !slices.Contains(keptColumns, field) {
+			if slices.Contains(systemFields, field) {
+				continue
+			}
 			if field == "extraData" && len(extraData) > 0 {
 				continue
 			}
