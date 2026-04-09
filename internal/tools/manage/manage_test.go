@@ -370,6 +370,62 @@ func TestManageCreateObservableInCase(t *testing.T) {
 	require.True(t, fetchedObservable.Sighted)
 }
 
+// TestManageCreateObservableInCaseReportsSuccess verifies that creating an observable
+// in a case returns IsError=false. Regression test for a reported bug where the server
+// would try both case and alert endpoints and return the alert 403 error even though
+// the case creation succeeded with 201.
+func TestManageCreateObservableInCaseReportsSuccess(t *testing.T) {
+	hiveClient := testutils.SetupTestWithCleanup(t)
+	mcpClient := testutils.GetMCPTestClient(t, nil, testutils.DummyElicitationAccept)
+
+	// Create a case to add observables to
+	authContext := testutils.GetAuthContext(testutils.NewHiveTestConfig())
+	testCase := testutils.MockInputCase()
+	testCase.Title = "Case for Observable Success Reporting"
+
+	createdCase, _, err := hiveClient.CaseAPI.CreateCase(authContext).InputCreateCase(*testCase).Execute()
+	require.NoError(t, err)
+	require.NotNil(t, createdCase)
+
+	// Create an observable using the case ID (not an alert ID)
+	request := mcp.CallToolRequest{
+		Params: mcp.CallToolParams{
+			Name: "manage-entities",
+			Arguments: map[string]any{
+				"operation":   "create",
+				"entity-type": types.EntityTypeObservable,
+				"entity-ids":  []string{createdCase.UnderscoreId},
+				"entity-data": map[string]interface{}{
+					"dataType": "ip",
+					"data":     "10.77.77.77",
+					"message":  "test observable",
+				},
+			},
+		},
+	}
+
+	result, err := mcpClient.CallTool(t.Context(), request)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+
+	// The core assertion: the tool must NOT report an error
+	require.False(t, result.IsError, "Creating an observable in a valid case must not return IsError=true")
+
+	// Verify the result contains the created observable
+	structuredData, ok := result.StructuredContent.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "create", structuredData["operation"])
+
+	resultArray, ok := structuredData["result"].([]any)
+	require.True(t, ok)
+	require.NotEmpty(t, resultArray, "Result should contain the created observable")
+
+	obs, ok := resultArray[0].(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "ip", obs["dataType"])
+	require.NotEmpty(t, obs["_id"])
+}
+
 // TestManageUpdateMultipleEntities tests batch updating multiple cases
 func TestManageUpdateMultipleEntities(t *testing.T) {
 	hiveClient := testutils.SetupTestWithCleanup(t)
