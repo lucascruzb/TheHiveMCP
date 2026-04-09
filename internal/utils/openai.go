@@ -102,9 +102,9 @@ func (w *OpenAIWrapper) getModelCompletion(
 	})
 
 	req := openai.ChatCompletionRequest{
-		Model:     w.ModelName,
-		Messages:  messages,
-		MaxTokens: w.MaxTokens,
+		Model:               w.ModelName,
+		Messages:            messages,
+		MaxCompletionTokens: w.MaxTokens,
 	}
 
 	for attempt := 0; attempt < w.MaxRetries; attempt++ {
