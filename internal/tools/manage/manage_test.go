@@ -55,7 +55,7 @@ func TestManageCreateAlert(t *testing.T) {
 	alertID, ok := resultsAlert["_id"].(string)
 	require.True(t, ok)
 	require.NotEmpty(t, alertID)
-	require.Equal(t, "Test Alert via MCP", resultsAlert["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]Test Alert via MCP[/UNTRUSTED_DATA]", resultsAlert["title"])
 	require.Equal(t, float64(3), resultsAlert["severity"])
 
 	// Verify the alert exists in TheHive by fetching it
@@ -292,7 +292,7 @@ func TestManageCreateTaskInCase(t *testing.T) {
 	taskID, ok := resultCase["_id"].(string)
 	require.True(t, ok)
 	require.NotEmpty(t, taskID)
-	require.Equal(t, "Investigate suspicious IP address", resultCase["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]Investigate suspicious IP address[/UNTRUSTED_DATA]", resultCase["title"])
 
 	// Verify the task exists in TheHive
 	fetchedTask, _, err := hiveClient.TaskAPI.GetTask(authContext, taskID).Execute()
@@ -1417,7 +1417,7 @@ func TestManageCreatePageInCase(t *testing.T) {
 	pageID, ok := resultData["_id"].(string)
 	require.True(t, ok)
 	require.NotEmpty(t, pageID)
-	require.Equal(t, "Investigation Notes", resultData["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]Investigation Notes[/UNTRUSTED_DATA]", resultData["title"])
 	require.Equal(t, "Default", resultData["category"])
 }
 
@@ -1460,7 +1460,7 @@ func TestManageCreateStandalonePage(t *testing.T) {
 	pageID, ok := resultData["_id"].(string)
 	require.True(t, ok)
 	require.NotEmpty(t, pageID)
-	require.Equal(t, "Incident Response Runbook", resultData["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]Incident Response Runbook[/UNTRUSTED_DATA]", resultData["title"])
 }
 
 // TestManageUpdatePage tests updating a page via the manage-entities tool

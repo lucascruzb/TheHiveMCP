@@ -104,6 +104,46 @@ var dateFields = []string{
 	"includeInTimeline",
 }
 
+// untrustedFields contains field names whose values are user-generated and may contain
+// adversarial content (prompt injection). Values in these fields are wrapped with
+// [UNTRUSTED_DATA]...[/UNTRUSTED_DATA] boundary tags so that LLM clients can
+// distinguish data from instructions.
+var untrustedFields = []string{
+	"title", "description", "message", "data",
+	"tags", "content", "summary", "source",
+	"sourceRef",
+}
+
+// isUntrustedField checks if a field name contains user-generated content
+func isUntrustedField(fieldName string) bool {
+	for _, f := range untrustedFields {
+		if fieldName == f {
+			return true
+		}
+	}
+	return false
+}
+
+// wrapUntrustedValue wraps a string or slice of strings with boundary tags.
+// Any occurrences of the boundary markers inside the value are escaped first
+// to prevent an attacker from prematurely closing/opening the boundary.
+func wrapUntrustedValue(value interface{}) interface{} {
+	switch v := value.(type) {
+	case string:
+		escaped := strings.ReplaceAll(v, "[UNTRUSTED_DATA]", "[ESCAPED_UNTRUSTED_DATA]")
+		escaped = strings.ReplaceAll(escaped, "[/UNTRUSTED_DATA]", "[/ESCAPED_UNTRUSTED_DATA]")
+		return "[UNTRUSTED_DATA]" + escaped + "[/UNTRUSTED_DATA]"
+	case []interface{}:
+		wrapped := make([]interface{}, len(v))
+		for i, item := range v {
+			wrapped[i] = wrapUntrustedValue(item)
+		}
+		return wrapped
+	default:
+		return value
+	}
+}
+
 // processDateField converts a date field value to string format if it's a recognized date field
 func processDateField(key string, value interface{}) (interface{}, error) {
 	// Check if this is a date field
@@ -168,48 +208,50 @@ func UnwrapUnion(v any) any {
 
 // ProcessDatesRecursive processes any Go value recursively to convert date fields.
 // Handles structs, maps, slices, arrays, and nested combinations.
-func ProcessDatesRecursive(value interface{}) (interface{}, error) {
+// When wrapUntrusted is true, user-generated fields are wrapped with
+// [UNTRUSTED_DATA]...[/UNTRUSTED_DATA] boundary tags.
+func ProcessDatesRecursive(value interface{}, wrapUntrusted bool) (interface{}, error) {
 	if value == nil {
 		return nil, nil
 	}
 
 	// Unwrap union types before processing so the output is flat
 	if u, ok := value.(Unwrapper); ok {
-		return ProcessDatesRecursive(u.Unwrap())
+		return ProcessDatesRecursive(u.Unwrap(), wrapUntrusted)
 	}
 
 	val := reflect.ValueOf(value)
-	return processDatesValue(val)
+	return processDatesValue(val, wrapUntrusted)
 }
 
-func processDatesValue(val reflect.Value) (interface{}, error) {
+func processDatesValue(val reflect.Value, wrapUntrusted bool) (interface{}, error) {
 	// Handle pointers
 	if val.Kind() == reflect.Ptr {
 		if val.IsNil() {
 			return nil, nil
 		}
-		return processDatesValue(val.Elem())
+		return processDatesValue(val.Elem(), wrapUntrusted)
 	}
 
 	switch val.Kind() {
 	case reflect.Struct:
-		return processDatesStruct(val)
+		return processDatesStruct(val, wrapUntrusted)
 	case reflect.Map:
-		return processDatesMap(val)
+		return processDatesMap(val, wrapUntrusted)
 	case reflect.Slice, reflect.Array:
-		return processDatesSlice(val)
+		return processDatesSlice(val, wrapUntrusted)
 	case reflect.Interface:
 		if val.IsNil() {
 			return nil, nil
 		}
-		return processDatesValue(val.Elem())
+		return processDatesValue(val.Elem(), wrapUntrusted)
 	default:
 		// For primitive types, return as-is
 		return val.Interface(), nil
 	}
 }
 
-func processDatesStruct(val reflect.Value) (map[string]interface{}, error) {
+func processDatesStruct(val reflect.Value, wrapUntrusted bool) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 	typ := val.Type()
 
@@ -269,20 +311,23 @@ func processDatesStruct(val reflect.Value) (map[string]interface{}, error) {
 			}
 		} else {
 			// Recursively process nested structures
-			processedValue, err = processDatesValue(fieldVal)
+			processedValue, err = processDatesValue(fieldVal, wrapUntrusted)
 			if err != nil {
 				slog.Error("Failed to process nested value in struct", "field", key, "error", err)
 				continue // Skip this field but continue processing others
 			}
 		}
 
+		if wrapUntrusted && isUntrustedField(key) {
+			processedValue = wrapUntrustedValue(processedValue)
+		}
 		result[key] = processedValue
 	}
 
 	return result, nil
 }
 
-func processDatesMap(val reflect.Value) (map[string]interface{}, error) {
+func processDatesMap(val reflect.Value, wrapUntrusted bool) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 
 	for _, key := range val.MapKeys() {
@@ -300,25 +345,28 @@ func processDatesMap(val reflect.Value) (map[string]interface{}, error) {
 			}
 		} else {
 			// Recursively process nested structures
-			processedValue, err = processDatesValue(mapVal)
+			processedValue, err = processDatesValue(mapVal, wrapUntrusted)
 			if err != nil {
 				return nil, fmt.Errorf("failed to process map value for key %s: %w", keyStr, err)
 			}
 		}
 
+		if wrapUntrusted && isUntrustedField(keyStr) {
+			processedValue = wrapUntrustedValue(processedValue)
+		}
 		result[keyStr] = processedValue
 	}
 
 	return result, nil
 }
 
-func processDatesSlice(val reflect.Value) ([]interface{}, error) {
+func processDatesSlice(val reflect.Value, wrapUntrusted bool) ([]interface{}, error) {
 	length := val.Len()
 	result := make([]interface{}, length)
 
 	for i := 0; i < length; i++ {
 		elem := val.Index(i)
-		processedElem, err := processDatesValue(elem)
+		processedElem, err := processDatesValue(elem, wrapUntrusted)
 		if err != nil {
 			return nil, fmt.Errorf("failed to process slice element %d: %w", i, err)
 		}
