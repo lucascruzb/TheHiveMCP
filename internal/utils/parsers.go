@@ -104,6 +104,42 @@ var dateFields = []string{
 	"includeInTimeline",
 }
 
+// untrustedFields contains field names whose values are user-generated and may contain
+// adversarial content (prompt injection). Values in these fields are wrapped with
+// [UNTRUSTED_DATA]...[/UNTRUSTED_DATA] boundary tags so that LLM clients can
+// distinguish data from instructions.
+var untrustedFields = []string{
+	"title", "description", "message", "data",
+	"tags", "content", "summary", "source",
+	"sourceRef",
+}
+
+// isUntrustedField checks if a field name contains user-generated content
+func isUntrustedField(fieldName string) bool {
+	for _, f := range untrustedFields {
+		if fieldName == f {
+			return true
+		}
+	}
+	return false
+}
+
+// wrapUntrustedValue wraps a string or slice of strings with boundary tags
+func wrapUntrustedValue(value interface{}) interface{} {
+	switch v := value.(type) {
+	case string:
+		return "[UNTRUSTED_DATA]" + v + "[/UNTRUSTED_DATA]"
+	case []interface{}:
+		wrapped := make([]interface{}, len(v))
+		for i, item := range v {
+			wrapped[i] = wrapUntrustedValue(item)
+		}
+		return wrapped
+	default:
+		return value
+	}
+}
+
 // processDateField converts a date field value to string format if it's a recognized date field
 func processDateField(key string, value interface{}) (interface{}, error) {
 	// Check if this is a date field
@@ -276,6 +312,9 @@ func processDatesStruct(val reflect.Value) (map[string]interface{}, error) {
 			}
 		}
 
+		if isUntrustedField(key) {
+			processedValue = wrapUntrustedValue(processedValue)
+		}
 		result[key] = processedValue
 	}
 
@@ -306,6 +345,9 @@ func processDatesMap(val reflect.Value) (map[string]interface{}, error) {
 			}
 		}
 
+		if isUntrustedField(keyStr) {
+			processedValue = wrapUntrustedValue(processedValue)
+		}
 		result[keyStr] = processedValue
 	}
 

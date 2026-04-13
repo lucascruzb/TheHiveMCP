@@ -148,7 +148,7 @@ func TestSearchCasesBySeverityAndStatus(t *testing.T) {
 
 	caseData, ok := casesData[0].(map[string]any)
 	require.True(t, ok)
-	require.Equal(t, "High severity open case", caseData["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]High severity open case[/UNTRUSTED_DATA]", caseData["title"])
 	require.Equal(t, float64(3), caseData["severity"])
 }
 
@@ -341,8 +341,8 @@ func TestSearchCasesWithAssigneeAndSorting(t *testing.T) {
 	// Verify sorting (oldest first with asc order)
 	firstCase := casesData[0].(map[string]any)
 	secondCase := casesData[1].(map[string]any)
-	require.Equal(t, "Admin's case 1", firstCase["title"])
-	require.Equal(t, "Admin's case 2", secondCase["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]Admin's case 1[/UNTRUSTED_DATA]", firstCase["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]Admin's case 2[/UNTRUSTED_DATA]", secondCase["title"])
 }
 
 // TestSearchAlertsWithComplexOrConditions tests using _or with multiple severity levels
@@ -953,7 +953,7 @@ func TestSearchExtraDataAndAdditionalQueries(t *testing.T) {
 
 	caseData := casesData[0].(map[string]any)
 	require.Equal(t, creationResult["case_id"], caseData["_id"])
-	require.Equal(t, "Test case with tasks", caseData["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]Test case with tasks[/UNTRUSTED_DATA]", caseData["title"])
 
 	restults, ok := structuredData["results"].([]any)
 	require.True(t, ok)
@@ -970,14 +970,14 @@ func TestSearchExtraDataAndAdditionalQueries(t *testing.T) {
 
 	alert := alertsData[0].(map[string]any)
 	require.Equal(t, "test", alert["type"])
-	require.Equal(t, "test", alert["source"])
+	require.Equal(t, "[UNTRUSTED_DATA]test[/UNTRUSTED_DATA]", alert["source"])
 
 	tasks, ok := firstResult["tasks"].([]any)
 	require.True(t, ok)
 	require.Len(t, tasks, 1)
 
 	task := tasks[0].(map[string]any)
-	require.Equal(t, "Test Task", task["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]Test Task[/UNTRUSTED_DATA]", task["title"])
 }
 
 func createTestCaseWithComment(t *testing.T, hiveClient *thehive.APIClient) map[string]interface{} {
@@ -1047,14 +1047,14 @@ func TestSearchAdditionalQueriesComments(t *testing.T) {
 
 	caseData := casesData[0].(map[string]any)
 	require.Equal(t, creationResult["case_id"], caseData["_id"])
-	require.Equal(t, "Test case for comment", caseData["title"])
+	require.Equal(t, "[UNTRUSTED_DATA]Test case for comment[/UNTRUSTED_DATA]", caseData["title"])
 
 	comments, ok := caseData["comments"].([]any)
 	require.True(t, ok)
 	require.Len(t, comments, 1)
 
 	comment := comments[0].(map[string]any)
-	require.Equal(t, "This is a test comment", comment["message"])
+	require.Equal(t, "[UNTRUSTED_DATA]This is a test comment[/UNTRUSTED_DATA]", comment["message"])
 }
 
 func createTaskWithLog(t *testing.T, hiveClient *thehive.APIClient) map[string]interface{} {
@@ -1137,7 +1137,7 @@ func TestSearchTaskTasKLogs(t *testing.T) {
 			require.Len(t, logs, 1)
 
 			log := logs[0].(map[string]any)
-			require.Equal(t, "This is a test log entry", log["message"])
+			require.Equal(t, "[UNTRUSTED_DATA]This is a test log entry[/UNTRUSTED_DATA]", log["message"])
 		}
 	}
 }
