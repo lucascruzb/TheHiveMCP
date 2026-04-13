@@ -118,6 +118,11 @@ func GetHTTPAuthContextFunc(options *types.TheHiveMcpDefaultOptions) func(ctx co
 			}
 		}
 
+		// Add default Cortex ID to context
+		if options.DefaultCortexID != "" {
+			ctx = context.WithValue(ctx, types.DefaultCortexIDCtxKey, options.DefaultCortexID)
+		}
+
 		// Add permissions to context
 		if newCtx, err := AddPermissionsToContext(ctx, options); err != nil {
 			slog.Warn("Failed to add permissions to context", "error", err)
