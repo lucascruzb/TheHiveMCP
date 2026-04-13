@@ -31,7 +31,7 @@ func GetDefaultCortexIDFromContext(ctx context.Context) string {
 	if id, ok := ctx.Value(types.DefaultCortexIDCtxKey).(string); ok {
 		return id
 	}
-	return "local"
+	return types.DefaultCortexID
 }
 
 // AddPermissionsToContext adds permissions configuration to the context

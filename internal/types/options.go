@@ -37,7 +37,7 @@ type TheHiveMcpDefaultOptions struct {
 	OpenAIAPIKey string
 	// OpenAIModel is the model to use for OpenAI
 	OpenAIModel string
-	// OpenAIMaxTokens is the maximum tokens for OpenAI responses (default: 320000)
+	// OpenAIMaxTokens is the maximum tokens for OpenAI responses (default: 32000)
 	OpenAIMaxTokens int
 	// DefaultCortexID is the default Cortex instance ID used when none is specified (default: local)
 	DefaultCortexID string
@@ -95,7 +95,7 @@ func NewTheHiveMcpDefaultOptions() (*TheHiveMcpDefaultOptions, error) {
 	flag.StringVar(&openAIAPIKey, string(FlagVarOpenAIAPIKey), defaultToEnv(EnvKeyOpenAIAPIKey, ""), "OpenAI API key (overrides env var OPENAI_API_KEY)")
 	flag.StringVar(&openAIModel, string(FlagVarOpenAIModel), defaultToEnv(EnvKeyOpenAIModel, "gpt-4"), "OpenAI model (overrides env var OPENAI_MODEL)")
 	flag.IntVar(&openAIMaxTokens, string(FlagVarOpenAIMaxTokens), defaultToEnvInt(EnvKeyOpenAIMaxTokens, 32000), "OpenAI max tokens (overrides env var OPENAI_MAX_TOKENS)")
-	flag.StringVar(&cortexID, string(FlagVarCortexID), defaultToEnv(EnvKeyCortexID, "local"), "Default Cortex instance ID (overrides env var CORTEX_ID, defaults to 'local')")
+	flag.StringVar(&cortexID, string(FlagVarCortexID), defaultToEnv(EnvKeyCortexID, DefaultCortexID), "Default Cortex instance ID (overrides env var CORTEX_ID, defaults to 'local')")
 	flag.Parse()
 
 	// Handle version flag

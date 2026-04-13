@@ -77,6 +77,8 @@ type PermissionConfig string
 const PermissionConfigReadOnly PermissionConfig = "read_only"
 const PermissionConfigAdmin PermissionConfig = "admin"
 
+const DefaultCortexID = "local"
+
 const DefaultMaxCompletionTime = 60 * time.Second
 const DefaultMaxCompletionRetries = 3
 
