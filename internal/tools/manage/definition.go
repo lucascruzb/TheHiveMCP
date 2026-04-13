@@ -20,6 +20,8 @@ func (t *ManageTool) Handler() server.ToolHandlerFunc {
 	return tools.WithValidation(t)
 }
 
+func (t *ManageTool) HasUntrustedData() bool { return true }
+
 func (t *ManageTool) Definition() mcp.Tool {
 	return mcp.NewTool(
 		t.Name(),
