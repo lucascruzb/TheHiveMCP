@@ -11,6 +11,10 @@ import (
 )
 
 func (t *ExecuteAutomationTool) Handle(ctx context.Context, request mcp.CallToolRequest, params ExecuteAutomationParams) (ExecuteAutomationResult, error) {
+	// Apply default Cortex ID from configuration if not specified by the caller
+	if params.CortexID == "" {
+		params.CortexID = utils.GetDefaultCortexIDFromContext(ctx)
+	}
 
 	switch params.Operation {
 	case OperationRunAnalyzer:

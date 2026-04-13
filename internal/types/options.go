@@ -37,8 +37,10 @@ type TheHiveMcpDefaultOptions struct {
 	OpenAIAPIKey string
 	// OpenAIModel is the model to use for OpenAI
 	OpenAIModel string
-	// OpenAIMaxTokens is the maximum tokens for OpenAI responses (default: 320000)
+	// OpenAIMaxTokens is the maximum tokens for OpenAI responses (default: 32000)
 	OpenAIMaxTokens int
+	// DefaultCortexID is the default Cortex instance ID used when none is specified (default: local)
+	DefaultCortexID string
 }
 
 func defaultToEnv(envKey EnvKey, defaultValue string) string {
@@ -76,6 +78,7 @@ func NewTheHiveMcpDefaultOptions() (*TheHiveMcpDefaultOptions, error) {
 	var openAIAPIKey string
 	var openAIModel string
 	var openAIMaxTokens int
+	var cortexID string
 	flag.BoolVar(&showVersion, "version", false, "Show version information")
 	flag.StringVar(&transport, string(FlagVarTransportType), "http", "Transport type (stdio, or http)")
 	flag.StringVar(&bindAddr, string(FlagVarBindAddr), "", "Address to listen on for HTTP server (overrides env vars)")
@@ -92,6 +95,7 @@ func NewTheHiveMcpDefaultOptions() (*TheHiveMcpDefaultOptions, error) {
 	flag.StringVar(&openAIAPIKey, string(FlagVarOpenAIAPIKey), defaultToEnv(EnvKeyOpenAIAPIKey, ""), "OpenAI API key (overrides env var OPENAI_API_KEY)")
 	flag.StringVar(&openAIModel, string(FlagVarOpenAIModel), defaultToEnv(EnvKeyOpenAIModel, "gpt-4"), "OpenAI model (overrides env var OPENAI_MODEL)")
 	flag.IntVar(&openAIMaxTokens, string(FlagVarOpenAIMaxTokens), defaultToEnvInt(EnvKeyOpenAIMaxTokens, 32000), "OpenAI max tokens (overrides env var OPENAI_MAX_TOKENS)")
+	flag.StringVar(&cortexID, string(FlagVarCortexID), defaultToEnv(EnvKeyCortexID, DefaultCortexID), "Default Cortex instance ID (overrides env var CORTEX_ID, defaults to 'local')")
 	flag.Parse()
 
 	// Handle version flag
@@ -125,5 +129,6 @@ func NewTheHiveMcpDefaultOptions() (*TheHiveMcpDefaultOptions, error) {
 		OpenAIAPIKey:          openAIAPIKey,
 		OpenAIModel:           openAIModel,
 		OpenAIMaxTokens:       openAIMaxTokens,
+		DefaultCortexID:       cortexID,
 	}, nil
 }

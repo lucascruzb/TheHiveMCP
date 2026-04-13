@@ -323,6 +323,8 @@ This allows you to set defaults via environment variables while overriding speci
 | Base URL | `OPENAI_BASE_URL` | `--openai-base-url` | `X-OpenAI-Base-Url` | `https://api.openai.com/v1` | OpenAI-compatible API base URL |
 | Model | `OPENAI_MODEL` | `--openai-model` | `X-OpenAI-Model-Name` | `gpt-4` | Model name |
 | Max tokens | `OPENAI_MAX_TOKENS` | `--openai-max-tokens` | `X-OpenAI-Max-Tokens` | `32000` | Maximum tokens for completions |
+| **Cortex** |
+| Default Cortex ID | `CORTEX_ID` | `--cortex-id` | - | `local` | Default Cortex instance ID for analyzer/responder execution |
 | **Logging** |
 | Log level | `LOG_LEVEL` | `--log-level` | - | `info` | Logging level |
 
@@ -342,6 +344,9 @@ LOG_LEVEL=INFO
 # PERMISSIONS_CONFIG=read_only                              # Default: safe read-only access
 # PERMISSIONS_CONFIG=admin                                  # Full access (development/testing only)
 # PERMISSIONS_CONFIG=docs/examples/permissions/analyst.yaml # Custom permissions file
+
+# Optional Cortex configuration:
+# CORTEX_ID=local               # Default Cortex instance ID (defaults to 'local')
 
 # Optional AI features:
 # OPENAI_API_KEY=sk-your-key    # Fallback when client doesn't support sampling

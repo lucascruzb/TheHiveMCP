@@ -26,6 +26,14 @@ func GetOpenAIClientFromContext(ctx context.Context) (*OpenAIWrapper, error) {
 	return client, nil
 }
 
+// GetDefaultCortexIDFromContext retrieves the default Cortex ID from the context
+func GetDefaultCortexIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(types.DefaultCortexIDCtxKey).(string); ok {
+		return id
+	}
+	return types.DefaultCortexID
+}
+
 // AddPermissionsToContext adds permissions configuration to the context
 func AddPermissionsToContext(ctx context.Context, perms *permissions.Config) context.Context {
 	return context.WithValue(ctx, types.PermissionsCtxKey, perms)

@@ -22,6 +22,7 @@ const OpenAIAPIKeyCtxKey CtxKey = "openai_api_key"
 const OpenAIBaseURLCtxKey CtxKey = "openai_base_url"
 const OpenAIModelCtxKey CtxKey = "openai_model"
 const OpenAIMaxTokensCtxKey CtxKey = "openai_max_tokens"
+const DefaultCortexIDCtxKey CtxKey = "default_cortex_id"
 
 type EnvKey string
 
@@ -40,6 +41,7 @@ const EnvKeyOpenAIBaseURL EnvKey = "OPENAI_BASE_URL"
 const EnvKeyOpenAIAPIKey EnvKey = "OPENAI_API_KEY"
 const EnvKeyOpenAIModel EnvKey = "OPENAI_MODEL"
 const EnvKeyOpenAIMaxTokens EnvKey = "OPENAI_MAX_TOKENS"
+const EnvKeyCortexID EnvKey = "CORTEX_ID"
 
 type FlagVar string
 
@@ -58,6 +60,7 @@ const FlagVarOpenAIAPIKey FlagVar = "openai-api-key"
 const FlagVarOpenAIModel FlagVar = "openai-model"
 const FlagVarOpenAIMaxTokens FlagVar = "openai-max-tokens"
 const FlagVarBindAddr FlagVar = "addr"
+const FlagVarCortexID FlagVar = "cortex-id"
 
 type HeaderKey string
 
@@ -73,6 +76,8 @@ type PermissionConfig string
 
 const PermissionConfigReadOnly PermissionConfig = "read_only"
 const PermissionConfigAdmin PermissionConfig = "admin"
+
+const DefaultCortexID = "local"
 
 const DefaultMaxCompletionTime = 60 * time.Second
 const DefaultMaxCompletionRetries = 3

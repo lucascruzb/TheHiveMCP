@@ -37,6 +37,11 @@ func makeStdioAuthContextFunc(options *types.TheHiveMcpDefaultOptions) func(cont
 			// Don't return early here since OpenAI is optional
 		}
 
+		// Add default Cortex ID to context
+		if options.DefaultCortexID != "" {
+			newCtx = context.WithValue(newCtx, types.DefaultCortexIDCtxKey, options.DefaultCortexID)
+		}
+
 		// Add permissions to context
 		newCtx, err = AddPermissionsToContext(newCtx, options)
 		if err != nil {
