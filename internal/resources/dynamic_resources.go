@@ -48,7 +48,7 @@ func parseUsers(results interface{}) (string, error) {
 			Email:        derefString(user.Email),
 			Organisation: user.Organisation,
 			Profile:      user.Profile,
-			Type:         user.Type,
+			Type:         string(user.Type),
 		})
 	}
 

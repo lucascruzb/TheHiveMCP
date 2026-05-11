@@ -47,7 +47,7 @@ func GetJSONFields(v interface{}) []string {
 	t := reflect.TypeOf(v)
 
 	// Handle pointer types
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 
@@ -188,7 +188,7 @@ type Unwrapper interface {
 //	func (r T) Unwrap() any { return utils.UnwrapUnion(r) }
 func UnwrapUnion(v any) any {
 	val := reflect.ValueOf(v)
-	if val.Kind() == reflect.Ptr {
+	if val.Kind() == reflect.Pointer {
 		if val.IsNil() {
 			return v
 		}
@@ -199,7 +199,7 @@ func UnwrapUnion(v any) any {
 	}
 	for i := 0; i < val.NumField(); i++ {
 		f := val.Field(i)
-		if f.Kind() == reflect.Ptr && !f.IsNil() {
+		if f.Kind() == reflect.Pointer && !f.IsNil() {
 			return f.Interface()
 		}
 	}
@@ -226,7 +226,7 @@ func ProcessDatesRecursive(value interface{}, wrapUntrusted bool) (interface{}, 
 
 func processDatesValue(val reflect.Value, wrapUntrusted bool) (interface{}, error) {
 	// Handle pointers
-	if val.Kind() == reflect.Ptr {
+	if val.Kind() == reflect.Pointer {
 		if val.IsNil() {
 			return nil, nil
 		}
@@ -294,12 +294,12 @@ func processDatesStruct(val reflect.Value, wrapUntrusted bool) (map[string]inter
 		// Check if this is a date field and handle appropriately
 		if isDateField(key) {
 			// Handle nil pointers for date fields explicitly
-			if fieldVal.Kind() == reflect.Ptr && fieldVal.IsNil() {
+			if fieldVal.Kind() == reflect.Pointer && fieldVal.IsNil() {
 				processedValue = nil
 			} else {
 				// For non-nil pointers, get the underlying value
 				var dateValue interface{}
-				if fieldVal.Kind() == reflect.Ptr {
+				if fieldVal.Kind() == reflect.Pointer {
 					dateValue = fieldVal.Elem().Interface()
 				} else {
 					dateValue = fieldVal.Interface()
