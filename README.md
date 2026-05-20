@@ -277,12 +277,13 @@ bootstrap.RegisterToolsToMCPServer(mcpServer)
 
 ### � Deployment quick reference
 
-| Deployment Type | Use Case | Complexity | Guide |
-|----------------|----------|------------|-------|
-| **Claude Desktop MCPB** | Personal use, quick start | ⭐ Easy | Above ⬆️ |
-| **stdio Local** | Local MCP hosts (GitHub Copilot) | ⭐⭐ Simple | [stdio Guide](docs/examples/stdio-local.md) |
-| **Remote Docker** | Team/cloud deployment | ⭐⭐⭐ Medium | [Remote Guide](docs/examples/remote-docker.md) |
-| **LibreChat** | Complete AI assistant setup | ⭐⭐⭐⭐ Advanced | [LibreChat Guide](docs/examples/librechat.md) |
+| Deployment Type         | Use Case                         | Complexity    | Guide                                                 |
+|-------------------------|----------------------------------|---------------|-------------------------------------------------------|
+| **Claude Desktop MCPB** | Personal use, quick start        | ⭐ Easy        | Above ⬆️                                              |
+| **Claude Code**         | Anthropic CLI (terminal)         | ⭐⭐ Simple     | [Claude Code Guide](docs/how-to/setup-claude-code.md) |
+| **stdio Local**         | Local MCP hosts (GitHub Copilot) | ⭐⭐ Simple     | [stdio Guide](docs/examples/stdio-local.md)           |
+| **Remote Docker**       | Team/cloud deployment            | ⭐⭐⭐ Medium    | [Remote Guide](docs/examples/remote-docker.md)        |
+| **LibreChat**           | Complete AI assistant setup      | ⭐⭐⭐⭐ Advanced | [LibreChat Guide](docs/examples/librechat.md)         |
 
 ---
 
