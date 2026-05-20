@@ -30,6 +30,18 @@ func GetSamplingModelCompletion(ctx context.Context, messages []mcp.PromptMessag
 		remainingMessages = messages
 	}
 
+	// Append the response-shape schema as a final user message, mirroring the
+	// OpenAI path (utils/openai.go). Without this, the sampling model has no
+	// description of FilterResult-style response fields and silently omits them.
+	schemaInstruction, err := getSchemaInstruction(target)
+	if err != nil {
+		return fmt.Errorf("failed to get schema instruction: %w", err)
+	}
+	remainingMessages = append(remainingMessages, mcp.PromptMessage{
+		Role:    mcp.RoleUser,
+		Content: mcp.NewTextContent(schemaInstruction),
+	})
+
 	samplingMessages := []mcp.SamplingMessage{}
 	for _, msg := range remainingMessages {
 		samplingMessages = append(samplingMessages, mcp.SamplingMessage{

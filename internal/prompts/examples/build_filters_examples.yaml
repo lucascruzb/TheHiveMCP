@@ -6,3 +6,9 @@
 
 - user: "Find observables with 'malware' or 'phishing' in the title, created in the last month [submitted 2024-08-07]"
   assistant: '{"raw_filters":{"_and": [{"_or": [{"_like": {"_field": "title", "_value": "%malware%"}}, {"_like": {"_field": "title", "_value": "%phishing%"}}]}, {"_gte": {"_field": "_createdAt", "_value": "2024-07-07T00:00:00"}}]}}'
+
+- user: "Find high severity cases and include the tasks and observables linked to them"
+  assistant: '{"raw_filters": {"_gte": {"_field": "severity", "_value": 3}}, "additional_queries": ["tasks", "observables"]}'
+
+- user: "Find observables marked as IOC, include their parent case or alert"
+  assistant: '{"raw_filters": {"_eq": {"_field": "ioc", "_value": true}}, "extra_data": ["links"]}'
