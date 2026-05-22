@@ -6,8 +6,8 @@ github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c h1:udKWzYgxTojEK
 github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
-github.com/StrangeBeeCorp/thehive4go v0.56.1 h1:LxX+pZn3QkXiiq/kga78uid9VPyJCn41WwAr/h7kFcM=
-github.com/StrangeBeeCorp/thehive4go v0.56.1/go.mod h1:DAOJcLxv++lM8ELdHhPB+CqzVpWuKnigLg3fFPhGkHY=
+github.com/StrangeBeeCorp/thehive4go v0.56.2 h1:bNHuWZVb3PBMj6mwCAHe+CW9X5X/tjfSyw5tNvotN2c=
+github.com/StrangeBeeCorp/thehive4go v0.56.2/go.mod h1:DAOJcLxv++lM8ELdHhPB+CqzVpWuKnigLg3fFPhGkHY=
 github.com/bahlo/generic-list-go v0.2.0 h1:5sz/EEAK+ls5wF+NeqDpk5+iNdMDXrh3z3nPnH1Wvgk=
 github.com/bahlo/generic-list-go v0.2.0/go.mod h1:2KvAjgMlE5NNynlg/5iLrrCCZ2+5xWbdbCW3pNTGyYg=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=

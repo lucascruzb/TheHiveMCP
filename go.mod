@@ -5,7 +5,7 @@ go 1.25.0
 toolchain go1.25.10
 
 require (
-	github.com/StrangeBeeCorp/thehive4go v0.56.1
+	github.com/StrangeBeeCorp/thehive4go v0.56.2
 	github.com/invopop/jsonschema v0.13.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mark3labs/mcp-go v0.43.1

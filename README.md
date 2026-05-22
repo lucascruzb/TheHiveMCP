@@ -95,7 +95,7 @@ This guide helps you connect TheHiveMCP to popular AI assistants through MCP hos
 
 ### What you'll need
 
-- A running **TheHive 5.x** instance with API access
+- A running **TheHive 5.5+** instance with API access
 - Your **TheHive API key** and URL
 - An AI assistant that supports MCP (Claude Desktop or other MCP clients)
 

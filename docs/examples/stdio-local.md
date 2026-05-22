@@ -6,7 +6,7 @@ This example shows how to run TheHiveMCP in stdio mode for integration with loca
 
 ## Prerequisites
 
-- TheHive 5.x instance with API access
+- TheHive 5.5+ instance with API access
 - TheHive API key (and optionally an organisation name)
 - MCP host that supports stdio transport
 
