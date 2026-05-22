@@ -7,7 +7,7 @@ This example shows how to deploy TheHiveMCP as a remote HTTP service using Docke
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- TheHive 5.x instance accessible
+- TheHive 5.5+ instance accessible
 
 ## Setup
 

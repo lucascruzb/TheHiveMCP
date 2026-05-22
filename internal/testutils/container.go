@@ -75,7 +75,7 @@ func StartTheHiveContainer(t *testing.T) (string, error) {
 	}
 
 	req := testcontainers.ContainerRequest{
-		Image:        "strangebee/thehive:5.5.2",
+		Image:        "strangebee/thehive:5.6.3",
 		ExposedPorts: []string{"9000/tcp"},
 		WaitingFor:   wait.ForHTTP("/api/status").WithPort("9000/tcp").WithStartupTimeout(5 * time.Minute),
 	}

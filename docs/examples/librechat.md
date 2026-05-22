@@ -15,7 +15,7 @@ This setup provides a web-based chat interface where users can interact with The
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- TheHive 5.x instance accessible
+- TheHive 5.5+ instance accessible
 - Anthropic API key
 
 ## Setup
