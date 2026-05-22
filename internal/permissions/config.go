@@ -9,7 +9,7 @@ import (
 
 // LoadFromFile loads and parses a permissions configuration from a file
 func LoadFromFile(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- path comes from trusted CLI argument
 	if err != nil {
 		return nil, fmt.Errorf("failed to read permissions file: %w", err)
 	}

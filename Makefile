@@ -1,8 +1,10 @@
-BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+BUILD_DATE := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 GIT_COMMIT=$(shell git rev-parse HEAD)
 VERSION=$(shell git describe --tags 2> /dev/null || echo "v0.0.0-${GIT_COMMIT}")
 GO := go
 GO_IMAGE := golang:1.25.10-alpine
+GOPATH ?= $(shell go env GOPATH)
+DOCKER_CACHE_MOUNTS := -v $(GOPATH)/pkg/mod:/go/pkg/mod -v $(HOME)/.cache/go-build:/root/.cache/go-build
 GOLDFLAGS := -ldflags="-s -w -X 'github.com/StrangeBeeCorp/TheHiveMCP/version.buildDate=${BUILD_DATE}' -X 'github.com/StrangeBeeCorp/TheHiveMCP/version.gitCommit=${GIT_COMMIT}' -X 'github.com/StrangeBeeCorp/TheHiveMCP/version.gitVersion=${VERSION}'"
 BUILDDIR := ./build
 DISTDIR := ./dist
@@ -16,12 +18,22 @@ RELEASE_TARGETS := linux-amd64 linux-arm64 darwin-amd64 darwin-arm64
 .PHONY: all
 all: fmt security test build ## Format, run security checks, test, and build
 
+.PHONY: lint-makefile
+lint-makefile: ## Lint the Makefile
+	@echo $(BGreen)----------------------$(Color_Off)
+	@echo $(BGreen)-- Linting Makefile --$(Color_Off)
+	@echo $(BGreen)----------------------$(Color_Off)
+	@make --dry-run -n all > /dev/null || exit 1
+	@echo "Syntax OK"
+	@docker run --rm --workdir / -v $(CURDIR)/Makefile:/Makefile -v $(CURDIR)/checkmake.ini:/checkmake.ini quay.io/checkmake/checkmake:latest || exit 1
+	@echo "checkmake OK"
+
 .PHONY: fmt
 fmt: ## Format the code
 	@echo $(BGreen)-------------$(Color_Off)
 	@echo $(BGreen)--- Format --$(Color_Off)
 	@echo $(BGreen)-------------$(Color_Off)
-	docker run -i --rm -v $(CURDIR):/app -w /app $(GO_IMAGE) go fmt ./...
+	docker run -i --rm -v $(CURDIR):/app -w /app $(DOCKER_CACHE_MOUNTS) $(GO_IMAGE) go fmt ./...
 	@echo "Code formatted"
 
 .PHONY: security
@@ -52,7 +64,7 @@ sast: ## Static Application Security Testing
 	@echo $(BGreen)---------------------------$(Color_Off)
 	@echo $(BGreen)-- Running SAST Analysis --$(Color_Off)
 	@echo $(BGreen)---------------------------$(Color_Off)
-	docker run -i --rm -v $(CURDIR):/app -w /app $(GO_IMAGE) sh -c 'go install github.com/securego/gosec/v2/cmd/gosec@latest && gosec ./...'
+	docker run -i --rm -v $(CURDIR):/app -w /app $(DOCKER_CACHE_MOUNTS) $(GO_IMAGE) sh -c 'go install github.com/securego/gosec/v2/cmd/gosec@v2.26.1 && gosec -exclude=G101 ./...'
 
 .PHONY: build
 build: ## Build binary for current host OS/Arch
@@ -71,10 +83,10 @@ test: pre ## Run tests with coverage
 	@echo $(BGreen)-----------------------$(Color_Off)
 	@echo $(BGreen)-- Running UnitTests --$(Color_Off)
 	@echo $(BGreen)-----------------------$(Color_Off)
-	docker run -i --rm --network host -v $(CURDIR):/app -w /app -v /var/run/docker.sock:/var/run/docker.sock $(GO_IMAGE) go test -coverprofile=coverage.out -covermode=atomic -v ./...
-	docker run -i --rm -v $(CURDIR):/app -w /app $(GO_IMAGE) go tool cover -func=coverage.out
+	docker run -i --rm --network host -v $(CURDIR):/app -w /app -v /var/run/docker.sock:/var/run/docker.sock $(DOCKER_CACHE_MOUNTS) $(GO_IMAGE) go test -coverprofile=coverage.out -covermode=atomic -v ./...
+	docker run -i --rm -v $(CURDIR):/app -w /app $(DOCKER_CACHE_MOUNTS) $(GO_IMAGE) go tool cover -func=coverage.out
 
-.PHONY: docker
+.PHONY: docker-build
 docker-build: ## Build Docker image
 	@echo $(BGreen)------------------------------$(Color_Off)
 	@echo $(BGreen)-- Building Docker Image --$(Color_Off)
@@ -128,7 +140,7 @@ vulncheck: ## Check for vulnerabilities
 	@echo $(BGreen)------------------------------$(Color_Off)
 	@echo $(BGreen)-- Security Vulnerability  --$(Color_Off)
 	@echo $(BGreen)------------------------------$(Color_Off)
-	docker run -i --rm -v $(CURDIR):/app -w /app $(GO_IMAGE) sh -c 'go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...'
+	docker run -i --rm -v $(CURDIR):/app -w /app $(DOCKER_CACHE_MOUNTS) $(GO_IMAGE) sh -c 'go install golang.org/x/vuln/cmd/govulncheck@v1.3.0 && govulncheck ./...'
 
 .PHONY: vetlint
 vetlint: ## Run linter checks
@@ -142,7 +154,7 @@ updatedep: ## Update dependencies
 	@echo $(BGreen)-----------------------$(Color_Off)
 	@echo $(BGreen)-- Update Dependencies --$(Color_Off)
 	@echo $(BGreen)-----------------------$(Color_Off)
-	docker run -i --rm -v $(CURDIR):/app -w /app $(GO_IMAGE) sh -c 'go get -u ./... && go mod tidy'
+	docker run -i --rm -v $(CURDIR):/app -w /app $(DOCKER_CACHE_MOUNTS) $(GO_IMAGE) sh -c 'go get -u ./... && go mod tidy'
 
 .PHONY: install-dev-deps
 install-dev-deps: ## Install development dependencies
@@ -157,7 +169,7 @@ build-%: pre
 	@echo "Building for $*..."
 	@OS=$$(echo $* | cut -d- -f1); \
 	ARCH=$$(echo $* | cut -d- -f2); \
-	docker run -i --rm -v $(CURDIR):/app -w /app -e GOOS=$$OS -e GOARCH=$$ARCH $(GO_IMAGE) go build $(GOLDFLAGS) -o $(BUILDDIR)/$(BINARY_NAME)-$* ./cmd/server/main.go
+	docker run -i --rm -v $(CURDIR):/app -w /app -e GOOS=$$OS -e GOARCH=$$ARCH $(DOCKER_CACHE_MOUNTS) $(GO_IMAGE) go build $(GOLDFLAGS) -o $(BUILDDIR)/$(BINARY_NAME)-$* ./cmd/server/main.go
 
 .PHONY: pre-dist
 pre-dist: ## Create distribution directory

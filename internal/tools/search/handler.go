@@ -195,7 +195,7 @@ func (t *SearchTool) buildSortOperation(sortBy, sortOrder string) *thehive.Input
 }
 
 func (t *SearchTool) buildPagingOperation(limit int, extraData []string) *thehive.InputQueryPagingOperation {
-	query := thehive.NewInputQueryPagingOperation(0, int32(limit), "page")
+	query := thehive.NewInputQueryPagingOperation(0, int32(limit), "page") // #nosec G115 -- limit is validated before reaching here
 	query.SetExtraData(extraData)
 	return query
 }
