@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -104,20 +105,33 @@ func (t *SearchTool) parseQuery(ctx context.Context, params SearchEntitiesParams
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal search params: %w", err)
 	}
+
+	// Only build the AI prompt if there are no retry messages (first attempt)
+	// or if an AI service is available.
 	prompt, err := prompts.GetBuildFiltersPrompt(ctx, string(query), params.EntityType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get search filter prompt: %w. This may indicate missing resources or system configuration issues", err)
 	}
 	messages := append(prompt.Messages, additionalMessages...)
 	var filterResult FilterResult
-	err = utils.GetModelCompletion(ctx, messages, &filterResult)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get AI model completion for query parsing: %w. Check that the AI service is available and configured correctly", err)
+	aiErr := utils.GetModelCompletion(ctx, messages, &filterResult)
+	if aiErr == nil {
+		slog.Info("Parsed natural language query via AI", "query", string(query), "filters", filterResult.RawFilters)
+		return &filterResult, nil
 	}
 
-	slog.Info("Parsed natural language query", "query", query, "filters", filterResult.RawFilters)
+	// If no AI service is available, fall back to the built-in heuristic parser.
+	if errors.Is(aiErr, utils.ErrNoAIService) {
+		slog.Info("No AI service configured, using heuristic parser", "query", params.Query, "entityType", params.EntityType)
+		result, hErr := parseQueryHeuristic(params)
+		if hErr != nil {
+			return nil, fmt.Errorf("heuristic parser failed: %w", hErr)
+		}
+		slog.Info("Heuristic parser generated filters", "query", params.Query, "filters", result.RawFilters)
+		return result, nil
+	}
 
-	return &filterResult, nil
+	return nil, fmt.Errorf("failed to get AI model completion for query parsing: %w. Check that the AI service is available and configured correctly", aiErr)
 }
 
 // Query building

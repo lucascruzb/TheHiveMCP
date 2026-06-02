@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"regexp"
@@ -13,6 +14,9 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
+
+// ErrNoAIService is returned when no AI backend (sampling, OpenAI) is configured.
+var ErrNoAIService = errors.New("no AI service available")
 
 const (
 	// regexCaptureGroupIndex represents the index of the first capture group in regex match results.
@@ -103,19 +107,18 @@ func GetModelCompletion(ctx context.Context, messages []mcp.PromptMessage, targe
 		return response
 	}
 
-	// Try to get OpenAI client from context
+	// Try OpenAI (context-based, then global fallback)
 	openAIWrapper, err := GetOpenAIClientFromContext(ctx)
-	if err != nil {
-		// Fallback to global OpenAI wrapper for backward compatibility
-		if globalOpenAIWrapper == nil {
-			return fmt.Errorf("no AI service available: OpenAI not configured and sampling not supported")
-		}
+	if err != nil && globalOpenAIWrapper != nil {
 		openAIWrapper = globalOpenAIWrapper
 	}
+	if openAIWrapper != nil {
+		logging.LogOpenAIRequest(ctx, openAIWrapper.ModelName, messages)
+		chatMessages := translatePromptMessagesToOpenAI(messages)
+		response := GetOpenaiModelCompletionWithWrapper(ctx, chatMessages, target, openAIWrapper)
+		logging.LogOpenAIResponse(ctx, openAIWrapper.ModelName, response)
+		return response
+	}
 
-	logging.LogOpenAIRequest(ctx, openAIWrapper.ModelName, messages)
-	chatMessages := translatePromptMessagesToOpenAI(messages)
-	response := GetOpenaiModelCompletionWithWrapper(ctx, chatMessages, target, openAIWrapper)
-	logging.LogOpenAIResponse(ctx, openAIWrapper.ModelName, response)
-	return response
+	return fmt.Errorf("%w: configure OPENAI_API_KEY or use an MCP client with sampling support", ErrNoAIService)
 }
