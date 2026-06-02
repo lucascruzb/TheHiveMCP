@@ -133,7 +133,6 @@ When prompted during installation, provide:
   - `read_only` - Default safe mode (search only, no modifications)
   - `admin` - Full access (for testing/development only)
   - Custom path to your permissions YAML file
-- **OpenAI API Key**: (Optional) For natural language processing fallback when MCP client doesn't support sampling
 
 
 #### Step 5: Test your setup
@@ -222,18 +221,17 @@ In your MCP host MCP config file (like `claude_desktop_settings.json`) add the f
         "THEHIVE_URL": "https://your-thehive-instance.com",
         "THEHIVE_API_KEY": "your-api-key-here",
         "THEHIVE_ORGANISATION": "your-org-name",
-        "PERMISSIONS_CONFIG": "read_only",
-        "OPENAI_API_KEY": "your-api-key-here",
-        "OPENAI_MODEL": "gpt5"
+        "PERMISSIONS_CONFIG": "read_only"
       }
     }
   }
 }
 ```
 
-Most MCP hosts don't support Sampling. Check if yours does [here][https://modelcontextprotocol.io/clients].
+`OPENAI_API_KEY` is optional. Without it, `search-entities` uses the built-in heuristic parser for common queries (severity, status, date ranges, assignee, tags). Add it only if you need full AI-powered natural language understanding.
 
-If it does, you can remove the OpenAI key and model from the config.
+Most MCP hosts don't support MCP Sampling. Check if yours does [here](https://modelcontextprotocol.io/clients).
+If it does, the client's built-in AI is used instead of any server-side backend.
 
 ### Run as HTTP server
 
@@ -319,11 +317,6 @@ This allows you to set defaults via environment variables while overriding speci
 | Bind address | `MCP_BIND_HOST` + `MCP_PORT` | `--addr` | - | - | HTTP server bind address (for example, `0.0.0.0:8082`) |
 | Endpoint path | `MCP_ENDPOINT_PATH` | `--mcp-endpoint-path` | - | `/mcp` | HTTP endpoint path |
 | Heartbeat interval | `MCP_HEARTBEAT_INTERVAL` | `--mcp-heartbeat-interval` | - | `30s` | Heartbeat interval for HTTP connections |
-| **OpenAI Integration** |
-| API key | `OPENAI_API_KEY` | `--openai-api-key` | `X-OpenAI-Api-Key` | - | OpenAI-compatible API key |
-| Base URL | `OPENAI_BASE_URL` | `--openai-base-url` | `X-OpenAI-Base-Url` | `https://api.openai.com/v1` | OpenAI-compatible API base URL |
-| Model | `OPENAI_MODEL` | `--openai-model` | `X-OpenAI-Model-Name` | `gpt-4` | Model name |
-| Max tokens | `OPENAI_MAX_TOKENS` | `--openai-max-tokens` | `X-OpenAI-Max-Tokens` | `32000` | Maximum tokens for completions |
 | **Cortex** |
 | Default Cortex ID | `CORTEX_ID` | `--cortex-id` | - | `local` | Default Cortex instance ID for analyzer/responder execution |
 | **Logging** |
@@ -339,7 +332,6 @@ THEHIVE_ORGANISATION=<thehive_organisation>  # Optional, defaults to user's own 
 PERMISSIONS_CONFIG=docs/examples/permissions/analyst.yaml  # Optional, defaults to read-only
 MCP_BIND_HOST=0.0.0.0
 MCP_PORT=8082
-OPENAI_API_KEY=<openai_api_key>  # Optional, for fallback LLM
 LOG_LEVEL=INFO
 # Permissions options (choose one):
 # PERMISSIONS_CONFIG=read_only                              # Default: safe read-only access
@@ -348,9 +340,6 @@ LOG_LEVEL=INFO
 
 # Optional Cortex configuration:
 # CORTEX_ID=local               # Default Cortex instance ID (defaults to 'local')
-
-# Optional AI features:
-# OPENAI_API_KEY=sk-your-key    # Fallback when client doesn't support sampling
 ```
 
 ### Multi-tenant & Per-Request Configuration
@@ -379,25 +368,26 @@ See [docs/permissions.md](docs/permissions.md) for detailed permission configura
 <details>
 <summary><strong>🤖 MCP sampling</strong></summary>
 
-### 🤖 MCP Sampling (AI-Powered Natural Language)
+### 🤖 Natural Language Query Processing
 
-TheHiveMCP uses **MCP Sampling** for natural language processing in the `search-entities` tool to convert queries like *"high severity alerts from last week"* into TheHive filters.
+The `search-entities` tool converts natural language queries like *"high severity alerts from last week"* into TheHive filters using a three-tier fallback:
 
-**How it works:**
-1. **Client-side sampling** (preferred): Uses the MCP client's built-in AI model
-2. **Server-side fallback**: Uses OpenAI API when client doesn't support sampling
-3. **Graceful degradation**: Without either, natural language search fails but other tools work normally
+1. **MCP Sampling** (preferred) — delegates to the AI model built into your MCP client. Zero extra configuration needed.
+2. **OpenAI-compatible API** (optional) — set `OPENAI_API_KEY` to use any OpenAI-compatible model on the server side.
+3. **Built-in heuristic parser** (always available) — pure Go, no API key required. Understands the most common query patterns out of the box.
 
-**Current MCP client support:**
-- ✅ **Github Copilot**: Full sampling support
-- ❌ **Most other MCP clients**: Limited or no sampling support (including Claude Desktop)
-- 🔧 **Workaround**: Configure `OPENAI_API_KEY` for server-side processing
+**The heuristic parser recognises:**
+- Severity: `low / medium / high / critical / P1–P4`
+- Status (per entity): `open / resolved / new / imported / waiting / completed` …
+- Date ranges: `today / yesterday / last week / last month / last N days / last N hours`
+- Assignee: *"assigned to john"*, *"owner alice@company.com"*
+- Tags: *"tagged with ransomware"*
+- Title keywords: *"containing phishing"*, *"named APT"*
+- Limits & sort: *"top 5"*, *"oldest first"*
 
-```bash
-# Enable server-side fallback for clients without sampling
-export OPENAI_API_KEY=sk-your-openai-key
-export OPENAI_BASE_URL=https://api.openai.com/v1  # Or OpenRouter for more models
-```
+**MCP client sampling support:**
+- ✅ **GitHub Copilot**: Full sampling support
+- ❌ **Most other clients** (including Claude Desktop): No sampling support → heuristic parser runs automatically
 </details>
 
 <details>
@@ -457,10 +447,11 @@ Access TheHive resources for documentation, schemas, and metadata. The entry poi
 - Get specific alert schema: `uri="hive://schema/alert"`
 
 ### [search-entities](docs/tools/search-entities.md)
-Search for entities in TheHive using natural language queries. Uses AI to translate natural language into TheHive filters.
+Search for entities in TheHive using natural language queries. Converts natural language into TheHive filters — no API key required.
 
 **Key features:**
-- Natural language query processing
+- Natural language query processing (MCP Sampling → OpenAI → built-in heuristic parser)
+- Works out of the box with zero external dependencies
 - Support for all entity types (alerts, cases, tasks, observables)
 - Flexible filtering and sorting options
 - Custom column and data field selection
