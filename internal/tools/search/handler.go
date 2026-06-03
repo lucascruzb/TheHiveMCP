@@ -3,7 +3,6 @@ package search
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -120,18 +119,15 @@ func (t *SearchTool) parseQuery(ctx context.Context, params SearchEntitiesParams
 		return &filterResult, nil
 	}
 
-	// If no AI service is available, fall back to the built-in heuristic parser.
-	if errors.Is(aiErr, utils.ErrNoAIService) {
-		slog.Info("No AI service configured, using heuristic parser", "query", params.Query, "entityType", params.EntityType)
-		result, hErr := parseQueryHeuristic(params)
-		if hErr != nil {
-			return nil, fmt.Errorf("heuristic parser failed: %w", hErr)
-		}
-		slog.Info("Heuristic parser generated filters", "query", params.Query, "filters", result.RawFilters)
-		return result, nil
+	// AI failed (no service configured, sampling unavailable, or transient error).
+	// Fall back to the built-in heuristic parser in all cases.
+	slog.Warn("AI unavailable, falling back to heuristic parser", "error", aiErr, "query", params.Query, "entityType", params.EntityType)
+	result, hErr := parseQueryHeuristic(params)
+	if hErr != nil {
+		return nil, fmt.Errorf("AI failed (%w) and heuristic parser also failed: %v", aiErr, hErr)
 	}
-
-	return nil, fmt.Errorf("failed to get AI model completion for query parsing: %w. Check that the AI service is available and configured correctly", aiErr)
+	slog.Info("Heuristic parser generated filters", "query", params.Query, "filters", result.RawFilters)
+	return result, nil
 }
 
 // Query building
