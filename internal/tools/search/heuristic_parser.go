@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	reDateNDays = regexp.MustCompile(`last\s+(\d+)\s+days?`)
-	reDateNHours = regexp.MustCompile(`last\s+(\d+)\s+hours?`)
+	// English: "last N days" / Portuguese: "últimos N dias" / "ultimos N dias"
+	reDateNDays = regexp.MustCompile(`(?:last|ultimos?|últimos?)\s+(\d+)\s+(?:days?|dias?)`)
+	// English: "last N hours" / Portuguese: "últimas N horas" / "ultimas N horas"
+	reDateNHours = regexp.MustCompile(`(?:last|ultimas?|últimas?)\s+(\d+)\s+(?:hours?|horas?)`)
 	// DD/MM or DD/MM/YYYY  (Brazilian / European format)
 	reDateDMY = regexp.MustCompile(`\b(\d{1,2})[/\-](\d{1,2})(?:[/\-](\d{2,4}))?\b`)
 	// YYYY-MM-DD
@@ -200,13 +202,19 @@ func detectDateRange(q string) dateRange {
 	case contains(q, "last year", "past year", "this year", "último ano", "ano passado"):
 		return dateRange{start: now.AddDate(-1, 0, 0)}
 
-	case contains(q, "last 24h", "last 24 h", "last 24 hours", "últimas 24h"):
+	case contains(q, "last 24h", "last 24 h", "last 24 hours",
+		"últimas 24h", "últimas 24 h", "últimas 24 horas",
+		"ultimas 24h", "ultimas 24 h", "ultimas 24 horas"):
 		return dateRange{start: now.Add(-24 * time.Hour)}
 
-	case contains(q, "last 48h", "last 48 h", "last 48 hours", "últimas 48h"):
+	case contains(q, "last 48h", "last 48 h", "last 48 hours",
+		"últimas 48h", "últimas 48 h", "últimas 48 horas",
+		"ultimas 48h", "ultimas 48 h", "ultimas 48 horas"):
 		return dateRange{start: now.Add(-48 * time.Hour)}
 
-	case contains(q, "last 72h", "last 72 h", "last 72 hours", "últimas 72h"):
+	case contains(q, "last 72h", "last 72 h", "last 72 hours",
+		"últimas 72h", "últimas 72 h", "últimas 72 horas",
+		"ultimas 72h", "ultimas 72 h", "ultimas 72 horas"):
 		return dateRange{start: now.Add(-72 * time.Hour)}
 	}
 
