@@ -182,10 +182,10 @@ func detectDateRange(q string) dateRange {
 
 	// Relative expressions → open-ended (_gte only)
 	switch {
-	case contains(q, "today", "hoje"):
+	// "hoje" / "today" / "último dia": from midnight today up to the current moment
+	case contains(q, "today", "hoje", "último dia", "ultimo dia", "last day"):
 		start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
-		end := start.Add(24*time.Hour - time.Second)
-		return dateRange{start: start, end: end}
+		return dateRange{start: start, end: now}
 
 	case contains(q, "yesterday", "ontem"):
 		d := now.AddDate(0, 0, -1)
@@ -202,10 +202,9 @@ func detectDateRange(q string) dateRange {
 	case contains(q, "last year", "past year", "this year", "último ano", "ano passado"):
 		return dateRange{start: now.AddDate(-1, 0, 0)}
 
-	case contains(q, "last 24h", "last 24 h", "last 24 hours", "last day",
+	case contains(q, "last 24h", "last 24 h", "last 24 hours",
 		"últimas 24h", "últimas 24 h", "últimas 24 horas",
-		"ultimas 24h", "ultimas 24 h", "ultimas 24 horas",
-		"último dia", "ultimo dia"):
+		"ultimas 24h", "ultimas 24 h", "ultimas 24 horas"):
 		return dateRange{start: now.Add(-24 * time.Hour)}
 
 	case contains(q, "last 48h", "last 48 h", "last 48 hours",
