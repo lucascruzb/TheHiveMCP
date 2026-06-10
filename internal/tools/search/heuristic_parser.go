@@ -46,11 +46,12 @@ func parseQueryHeuristic(params SearchEntitiesParams) (*FilterResult, error) {
 	// Status
 	conditions = append(conditions, detectStatusFilters(q, params.EntityType)...)
 
-	// Date range
+	// Date range — filter by "date" (event time set by the source) rather than
+	// "_createdAt" (TheHive ingestion time) to match what the dashboard shows.
 	if dr := detectDateRange(q); !dr.start.IsZero() {
-		conditions = append(conditions, gteFilter("_createdAt", dr.start.UTC().Format(dateLayout)))
+		conditions = append(conditions, gteFilter("date", dr.start.UTC().Format(dateLayout)))
 		if !dr.end.IsZero() {
-			conditions = append(conditions, lteFilter("_createdAt", dr.end.UTC().Format(dateLayout)))
+			conditions = append(conditions, lteFilter("date", dr.end.UTC().Format(dateLayout)))
 		}
 	}
 
