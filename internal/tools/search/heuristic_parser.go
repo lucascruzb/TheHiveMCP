@@ -202,9 +202,10 @@ func detectDateRange(q string) dateRange {
 	case contains(q, "last year", "past year", "this year", "último ano", "ano passado"):
 		return dateRange{start: now.AddDate(-1, 0, 0)}
 
-	case contains(q, "last 24h", "last 24 h", "last 24 hours",
+	case contains(q, "last 24h", "last 24 h", "last 24 hours", "last day",
 		"últimas 24h", "últimas 24 h", "últimas 24 horas",
-		"ultimas 24h", "ultimas 24 h", "ultimas 24 horas"):
+		"ultimas 24h", "ultimas 24 h", "ultimas 24 horas",
+		"último dia", "ultimo dia"):
 		return dateRange{start: now.Add(-24 * time.Hour)}
 
 	case contains(q, "last 48h", "last 48 h", "last 48 hours",
