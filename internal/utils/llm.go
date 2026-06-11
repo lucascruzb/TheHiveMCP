@@ -100,7 +100,10 @@ func GetModelCompletion(ctx context.Context, messages []mcp.PromptMessage, targe
 		logging.LogSamplingModelRequest(ctx, messages)
 		response := GetSamplingModelCompletion(ctx, messages, target)
 		logging.LogSamplingModelResponse(ctx, response)
-		return response
+		if response == nil {
+			return nil
+		}
+		slog.Warn("Sampling failed, falling back to OpenAI", "error", response)
 	}
 
 	// Try to get OpenAI client from context
