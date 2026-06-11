@@ -22,6 +22,17 @@ var (
 	reKeyword  = regexp.MustCompile(`\b(?:title\s+(?:contains?|like)|containing|named?)\s+["']?([^"']+?)["']?(?:\s|$)`)
 	// "type wazuh_alert_7" / "tipo wazuh_alert_7" / bare "wazuh_alert_7"
 	reType = regexp.MustCompile(`\b(?:type|tipo)\s+(\S+)|\b(wazuh_alert_\d+)\b`)
+	// "group by type" / "agrupado por tipo" / "agrupar por tipo"
+	reGroupBy = regexp.MustCompile(`\b(?:agrupados?\s+por|agrupar\s+por|resumo\s+por|group\s+by|summary\s+by|grouped\s+by)\s+(\S+)`)
+	// maps Portuguese field names to TheHive field names
+	groupByFieldMap = map[string]string{
+		"tipo":       "type",
+		"status":     "status",
+		"severidade": "severity",
+		"severity":   "severity",
+		"assignee":   "assignee",
+		"type":       "type",
+	}
 )
 
 // dateLayout is used only for absolute date expressions (DD/MM/YYYY, YYYY-MM-DD).
@@ -75,6 +86,21 @@ func parseQueryHeuristic(params SearchEntitiesParams) (*FilterResult, error) {
 		}
 	}
 
+	// GroupBy: "agrupado por tipo", "group by type", "resumo por status", etc.
+	var groupBy string
+	if m := reGroupBy.FindStringSubmatch(q); m != nil {
+		raw := strings.ToLower(m[1])
+		if mapped, ok := groupByFieldMap[raw]; ok {
+			groupBy = mapped
+		} else {
+			groupBy = raw
+		}
+	} else if contains(q, "por tipo", "by type", "per type") &&
+		contains(q, "resumo", "agrupado", "group", "summary", "total", "breakdown") {
+		// "resumo agrupado...por tipo" / "total por tipo" → group by type
+		groupBy = "type"
+	}
+
 	// Build raw filter
 	var rawFilters map[string]interface{}
 	switch len(conditions) {
@@ -118,6 +144,7 @@ func parseQueryHeuristic(params SearchEntitiesParams) (*FilterResult, error) {
 		KeptColumns:       params.ExtraColumns,
 		ExtraData:         params.ExtraData,
 		AdditionalQueries: params.AdditionalQueries,
+		GroupBy:           groupBy,
 	}, nil
 }
 

@@ -37,7 +37,8 @@ type SearchEntitiesParams struct {
 	ExtraColumns      []string `json:"extra-columns,omitempty" jsonschema_description:"List of columns to keep in the output. Defaults are entity-specific: alerts include severity/status, cases include status/severity, tasks include assignee, etc. Query the [entity]-schema from server resources for available columns."`
 	ExtraData         []string `json:"extra-data,omitempty" jsonschema_description:"List of additional data fields to include in the output. Query the [entity]-schema from server resources for available extra data fields."`
 	AdditionalQueries []string `json:"additional-queries,omitempty" jsonschema_description:"Additional queries to perform on the results. Different queries are supported depending on the entity type. For example, for cases you can fetch tasks or observables related to the found cases. Use this to enrich the results with related data. Refer to the entity schema from server resources for supported additional queries."`
-	Count             bool     `json:"count,omitempty" jsonschema_description:"If true, returns only the count of matching entities instead of the entities themselves."`
+	Count   bool   `json:"count,omitempty" jsonschema_description:"If true, returns only the count of matching entities instead of the entities themselves."`
+	GroupBy string `json:"group-by,omitempty" jsonschema_description:"Field to group results by, returning a count summary per group value. For example, 'type' returns the count of entities per type. When set, returns grouped counts instead of individual entities. Can also be detected from natural language (e.g. 'group by type', 'agrupado por tipo')."`
 }
 
 type SearchEntitiesResult struct {
@@ -71,6 +72,17 @@ func NewSearchEntitiesResult(results []map[string]interface{}, params SearchEnti
 	}, nil
 }
 
+// groupByField returns the effective groupBy field: explicit param overrides parser detection.
+func groupByField(params SearchEntitiesParams, filters *FilterResult) string {
+	if params.GroupBy != "" {
+		return params.GroupBy
+	}
+	if filters != nil {
+		return filters.GroupBy
+	}
+	return ""
+}
+
 // Query parsing - internal helper struct
 type FilterResult struct {
 	RawFilters        map[string]interface{} `json:"raw_filters" jsonschema_description:"Raw filter dictionary for TheHive queries. Format: {operator: {_field: <field>, _value: <value>}}. Operators: _and, _or, _not, _eq, _ne, _gt, _gte, _lt, _lte, _between (_from, _to), _like, _in, _startsWith, _endsWith, _has, _id, _any, _match."`
@@ -80,4 +92,5 @@ type FilterResult struct {
 	KeptColumns       []string               `json:"kept_columns" jsonschema_description:"List of columns to keep in the output. Default is ['_id', 'title', 'url']"`
 	ExtraData         []string               `json:"extra_data" jsonschema_description:"List of additional data fields to include in the output."`
 	AdditionalQueries []string               `json:"additional_queries" jsonschema_description:"List of additional queries to perform on the results to enrich them with related data."`
+	GroupBy           string                 `json:"group_by,omitempty" jsonschema_description:"Field to group results by for aggregated summary queries (e.g. 'type', 'status', 'severity')."`
 }

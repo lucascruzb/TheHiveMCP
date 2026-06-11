@@ -137,17 +137,39 @@ func (t *SearchTool) buildHiveQuery(params SearchEntitiesParams, filters *Filter
 	listOp := t.buildListOperation(params.EntityType)
 	filterOp := t.buildFilterOperation(filters.RawFilters)
 
-	// Exclude unneeded fields
-	excludedFields := t.getExcludedFields(params.EntityType, filters.KeptColumns, filters.ExtraData)
-
 	query := []thehive.InputQueryNamedOperation{
 		thehive.InputQueryGenericOperationAsInputQueryNamedOperation(listOp),
 		thehive.MapmapOfStringAnyAsInputQueryNamedOperation(filterOp),
 	}
 
-	if params.Count {
+	// Determine effective groupBy (explicit param wins over parser-detected)
+	effectiveGroupBy := groupByField(params, filters)
+
+	var excludedFields []string
+	if effectiveGroupBy != "" {
+		// GroupBy aggregation: inject native TheHive groupBy operation.
+		// ExcludeFields must be empty — result objects are custom aggregates, not full entities.
+		groupByOp := map[string]interface{}{
+			"_name":  "groupBy",
+			"_field": effectiveGroupBy,
+			"_select": []interface{}{
+				map[string]interface{}{"_agg": "count"},
+			},
+		}
+		pageOp := map[string]interface{}{
+			"_name": "page",
+			"_from": 0,
+			"_to":   1000,
+		}
+		query = append(query,
+			thehive.MapmapOfStringAnyAsInputQueryNamedOperation(&groupByOp),
+			thehive.MapmapOfStringAnyAsInputQueryNamedOperation(&pageOp),
+		)
+		excludedFields = []string{}
+	} else if params.Count {
 		countOp := thehive.NewInputQueryGenericOperation("count")
 		query = append(query, thehive.InputQueryGenericOperationAsInputQueryNamedOperation(countOp))
+		excludedFields = t.getExcludedFields(params.EntityType, filters.KeptColumns, filters.ExtraData)
 	} else {
 		sortOp := t.buildSortOperation(filters.SortBy, filters.SortOrder)
 		pageOp := t.buildPagingOperation(filters.NumResults, filters.ExtraData)
@@ -155,6 +177,7 @@ func (t *SearchTool) buildHiveQuery(params SearchEntitiesParams, filters *Filter
 			thehive.InputQuerySortOperationAsInputQueryNamedOperation(sortOp),
 			thehive.InputQueryPagingOperationAsInputQueryNamedOperation(pageOp),
 		)
+		excludedFields = t.getExcludedFields(params.EntityType, filters.KeptColumns, filters.ExtraData)
 	}
 
 	hiveQuery := thehive.InputQuery{
