@@ -20,6 +20,8 @@ var (
 	reAssignee = regexp.MustCompile(`\b(?:assigned\s+to|assignee|owner(?:ed\s+by)?)\s+(\S+)`)
 	reTag      = regexp.MustCompile(`\b(?:tagged?\s+with|tag)\s+["']?([^"'\s]+)["']?`)
 	reKeyword  = regexp.MustCompile(`\b(?:title\s+(?:contains?|like)|containing|named?)\s+["']?([^"']+?)["']?(?:\s|$)`)
+	// "type wazuh_alert_7" / "tipo wazuh_alert_7" / bare "wazuh_alert_7"
+	reType = regexp.MustCompile(`\b(?:type|tipo)\s+(\S+)|\b(wazuh_alert_\d+)\b`)
 )
 
 // dateLayout is used only for absolute date expressions (DD/MM/YYYY, YYYY-MM-DD).
@@ -53,6 +55,17 @@ func parseQueryHeuristic(params SearchEntitiesParams) (*FilterResult, error) {
 	// Tag
 	if m := reTag.FindStringSubmatch(q); m != nil {
 		conditions = append(conditions, likeFilter("tags", "%"+m[1]+"%"))
+	}
+
+	// Alert type ("type wazuh_alert_7", "tipo wazuh_alert_10", or bare "wazuh_alert_7")
+	if m := reType.FindStringSubmatch(q); m != nil {
+		typeVal := m[1]
+		if typeVal == "" {
+			typeVal = m[2]
+		}
+		if typeVal != "" {
+			conditions = append(conditions, eqFilter("type", typeVal))
+		}
 	}
 
 	// Keyword in title
