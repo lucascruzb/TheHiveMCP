@@ -152,9 +152,6 @@ func (t *SearchTool) buildHiveQuery(params SearchEntitiesParams, filters *Filter
 		groupByOp := map[string]interface{}{
 			"_name":  "groupBy",
 			"_field": effectiveGroupBy,
-			"_select": []interface{}{
-				map[string]interface{}{"_agg": "count"},
-			},
 		}
 		pageOp := map[string]interface{}{
 			"_name": "page",
