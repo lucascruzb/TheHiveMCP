@@ -156,7 +156,8 @@ func (t *SearchTool) buildHiveQuery(params SearchEntitiesParams, filters *Filter
 		// GroupBy aggregation: inject native TheHive groupBy operation.
 		// ExcludeFields must be empty — result objects are custom aggregates, not full entities.
 		groupByOp := map[string]interface{}{
-			"_name":  "groupBy",
+			"_name":  "aggregation",
+			"_agg":   "count",
 			"_field": effectiveGroupBy,
 		}
 		pageOp := map[string]interface{}{
