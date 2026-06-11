@@ -21,6 +21,7 @@ const maxSearchRetries = 3
 
 func (t *SearchTool) Handle(ctx context.Context, req mcp.CallToolRequest, params SearchEntitiesParams) (SearchEntitiesResult, error) {
 	additionalMessages := []mcp.PromptMessage{}
+	var lastExecErr error
 	for attempt := 1; attempt <= maxSearchRetries; attempt++ {
 		// 3. Get filters from natural language query
 		filters, err := t.parseQuery(ctx, params, additionalMessages)
@@ -57,6 +58,7 @@ func (t *SearchTool) Handle(ctx context.Context, req mcp.CallToolRequest, params
 		// 6. Execute query
 		results, err := t.executeQuery(ctx, hiveQuery, params.EntityType)
 		if err != nil {
+			lastExecErr = err
 			slog.Warn("Search attempt failed, retrying", "attempt", attempt, "error", err)
 			additionalMessages, err = expandAdditionalMessages(additionalMessages, filters, err)
 			if err != nil {
@@ -77,9 +79,13 @@ func (t *SearchTool) Handle(ctx context.Context, req mcp.CallToolRequest, params
 		return NewSearchEntitiesResult(results, params, filters.RawFilters)
 	}
 
-	return SearchEntitiesResult{}, tools.NewToolError("maximum search retries exceeded").
+	errMsg := tools.NewToolError("maximum search retries exceeded").
 		Hint("The query could not be translated to valid TheHive filters").
 		Hint("Try simplifying your search criteria or using more specific field names")
+	if lastExecErr != nil {
+		errMsg = errMsg.Cause(lastExecErr)
+	}
+	return SearchEntitiesResult{}, errMsg
 }
 
 func expandAdditionalMessages(original []mcp.PromptMessage, filters *FilterResult, execErr error) ([]mcp.PromptMessage, error) {
