@@ -160,15 +160,7 @@ func (t *SearchTool) buildHiveQuery(params SearchEntitiesParams, filters *Filter
 			"_agg":   "count",
 			"_field": effectiveGroupBy,
 		}
-		pageOp := map[string]interface{}{
-			"_name": "page",
-			"_from": 0,
-			"_to":   1000,
-		}
-		query = append(query,
-			thehive.MapmapOfStringAnyAsInputQueryNamedOperation(&groupByOp),
-			thehive.MapmapOfStringAnyAsInputQueryNamedOperation(&pageOp),
-		)
+		query = append(query, thehive.MapmapOfStringAnyAsInputQueryNamedOperation(&groupByOp))
 		excludedFields = []string{}
 	} else if params.Count {
 		countOp := thehive.NewInputQueryGenericOperation("count")
